@@ -315,7 +315,7 @@
 (defgroup cdlatex nil
   "LaTeX label and citation support."
   :tag "CDLaTeX"
-  :link '(url-link :tag "Home Page" "http://zon.astro.uva.nl/~dominik/Tools/")
+  :link '(url-link :tag "Home Page" "https://github.com/hoorayphyer/cdlatex")
   :prefix "cdlatex-"
   :group 'tex)
 
@@ -423,7 +423,7 @@ indicating the label types for which it should be true."
   "Support for mathematical symbols and accents in CDLaTeX."
   :group 'cdlatex)
 
-(defcustom cdlatex-math-symbol-prefix ?`
+(defcustom cdlatex-math-symbol-prefix ?\;
   "Prefix key for `cdlatex-math-symbol'.
 This may be a character, a string readable with read-kbd-macro, or a
 lisp vector."
@@ -582,10 +582,17 @@ automatic help when idle for more than this amount of time."
   "Keymap for CDLaTeX minor mode.")
 (defvar cdlatex-mode-menu nil)
 
+;; TODO store a version of fall back key map??
+;; (defvar cdlatex-which-major-mode-map nil;;LaTeX-mode-map
+;;   "Stores the major mode map in which cdlatex is active.")
+;; (make-variable-buffer-local 'cdlatex-which-major-mode-map)
+
 ;;;###autoload
 (defun turn-on-cdlatex ()
   "Turn on CDLaTeX minor mode."
-  (cdlatex-mode t))
+  (cdlatex-mode t)
+  ;; (setq cdlatex-which-major-mode-map LaTeX-mode-map)
+  )
 
 ;;;###autoload
 (defun cdlatex-mode (&optional arg)
@@ -1084,28 +1091,34 @@ The combinations are defined in `cdlatex-math-symbol-alist'.  If not in a LaTeX
 math environment, you also get a pair of dollars."
   (interactive)
   (let* ((cell (cdlatex-read-char-with-help
-		cdlatex-math-symbol-alist-comb
-		1 cdlatex-math-symbol-no-of-levels
-		"Math symbol level %d of %d: "
-		"AVAILABLE MATH SYMBOLS.  [%c]=next level "
-		cdlatex-math-symbol-prefix
-		(get 'cdlatex-math-symbol-alist-comb 'cdlatex-bindings)))
-	 (char (car cell))
-	 (level (cdr cell))
-	 (entry (assoc char cdlatex-math-symbol-alist-comb))
-	 (symbol (nth level entry)))
+		            cdlatex-math-symbol-alist-comb
+		            1 cdlatex-math-symbol-no-of-levels
+		            "Math symbol level %d of %d: "
+		            "AVAILABLE MATH SYMBOLS.  [%c]=next level "
+		            cdlatex-math-symbol-prefix
+		            (get 'cdlatex-math-symbol-alist-comb 'cdlatex-bindings)))
+	       (char (car cell))
+	       (level (cdr cell))
+	       (entry (assoc char cdlatex-math-symbol-alist-comb))
+	       (symbol (nth level entry)))
 
     (if (or (not symbol)
-	    (not (stringp symbol))
-	    (equal symbol ""))
-	(error "No such math symbol %c on level %d" char level))
+	          (not (stringp symbol))
+	          (equal symbol ""))
+	      ;; (error "No such math symbol %c on level %d" char level)
+        (progn
+          (insert-char cdlatex-math-symbol-prefix level)
+          ;; (funcall (cdr (assoc char cdlatex-which-major-mode-map )))
+          (insert char)
+          (catch 'aaa)
+          (throw 'aaa nil)))
 
     (if (or (not (texmathp))
-            (cdlatex-number-of-backslashes-is-odd))
-        (cdlatex-dollar))
+              (cdlatex-number-of-backslashes-is-odd))
+      (cdlatex-dollar))
 
     (insert symbol)
-    (when (string-match "\\?" symbol)
+    (if (string-match "\\?" symbol)
       (cdlatex-position-cursor))))
 
 (defun cdlatex-read-char-with-help (alist start-level max-level prompt-format
