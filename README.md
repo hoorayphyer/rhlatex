@@ -1,3 +1,6 @@
+# HRLaTex
+Based on CDLaTex
+
 # CDLaTex
 Copyright (c) 2010, 2011, 2012, 2014 Free Software Foundation, Inc.  
 **AUTHOR:** Carsten Dominik <carsten.dominik@gmail.com>  
