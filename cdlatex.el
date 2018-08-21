@@ -1141,8 +1141,7 @@ math environment, you also get a pair of dollars."
                   (if (> help-is-on (count-lines (point-min) (point-max)))
                       (setq help-is-on 1)))
               (setq help-is-on 1)))
-           ((or (= char ?\ )
-		(equal char prefix))
+           ((equal char prefix)
             (setq level (if (= level cdlatex-math-symbol-no-of-levels)
                             1
                           (1+ level))))
