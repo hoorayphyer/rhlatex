@@ -1,4 +1,4 @@
-# HRLaTex
+# RHLaTex
 Based on CDLaTex
 
 # CDLaTex
