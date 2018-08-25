@@ -8,3 +8,7 @@ Copyright (c) 2010, 2011, 2012, 2014 Free Software Foundation, Inc.
 ## Modifications
 ** Use ; as math-symbol-prefix, which is much more convient. When the symbol is not in the math-symbol-alist, instead of throwing an error, cdlatex will just insert the prefix and the character faithfully ( this should be a solution for most situations of inserting ; itself )
 
+## TODO
+- [ ] mathmodify ( also add suggests for letters used as math variables in text environment )
+- [ ] env switch
+- [ ] undo/redo with evil

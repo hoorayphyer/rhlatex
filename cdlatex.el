@@ -1180,8 +1180,8 @@ constant `cdlatex-math-modify-alist'."
   (catch 'exit
 
     (let ((inside-math (texmathp))
-	  (win (selected-window))
-	  char (help-is-on nil) ass acc rmdot it cmd extrabrac)
+	        (win (selected-window))
+	        char (help-is-on nil) ass acc rmdot it cmd extrabrac)
       (catch 'exit1
         (save-window-excursion
           (while t
