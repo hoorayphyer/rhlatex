@@ -481,7 +481,7 @@ functions and opperators."
 	   (character ?a)
 	   (repeat (string :tag "macro" "")))))
 
-(defcustom cdlatex-math-modify-prefix ?'
+(defcustom cdlatex-math-modify-prefix ?`
   "Prefix key for `cdlatex-math-modify'.
 It can be a character, a string interpretable with `read-kbd-macro',
 or a lisp vector."
