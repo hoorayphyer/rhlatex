@@ -535,7 +535,7 @@ Font-lock must be loaded as well to actually get fontified display."
   :group 'cdlatex-miscellaneous-configurations
   :type '(boolean))
 
-(defcustom cdlatex-paired-parens "$[{"
+(defcustom cdlatex-paired-parens "$([{"
   "*String with the opening parens you want to have inserted paired.
 The following parens are allowed here: `$([{|<'.
 I recommend to set this to '$[{' as these have syntactical meaning in
@@ -986,10 +986,10 @@ the template.  This is mainly useful for \"items\" of environments, where
     (setq begpos (point))
     (if (try-completion env cdlatex-env-alist-comb)
         (progn
-          (setq template (nth (if item 2 1) 
+          (setq template (nth (if item 2 1)
                               (assoc env cdlatex-env-alist-comb)))
           (if (string= (substring template 0 2) "\\\\")
-              ;; Need a double backslash to teminate previous item
+              ;; Need a double backslash to terminate previous item
               (progn
                 (setq template (substring template 2))
                 (if (not (save-excursion
@@ -997,7 +997,7 @@ the template.  This is mainly useful for \"items\" of environments, where
                                                (- (point) 20) t)))
                     (save-excursion
                       (skip-chars-backward " \t\n")
-                      (insert "\\\\")))))
+                      (insert " \\\\"))))) ;; note the leading space - RH
           (insert template))
       (insert "\\begin{" env "}\n?\n\\end{" env "}\n"))
     (move-marker endmarker (point))
@@ -1462,14 +1462,18 @@ zZ
      "\\frac{?}{}"           cdlatex-position-cursor nil nil t)
     ("sq"         "Insert \\sqrt{}"
      "\\sqrt{?}"             cdlatex-position-cursor nil nil t)
-    ;; ("int"       "Insert \\int_{}^{}\\,"
-    ;;  "\\int_{?}^{}\\,"  cdlatex-position-cursor nil nil t) ;; TODO somehow the \\, doesn't show
+    ("int"       "Insert \\int_{}^{}\\,"
+     "\\int_{?}^{}\\,"       cdlatex-position-cursor nil nil t)
+    ("lim"       "Insert \\lim\\limits_{}\\,"
+     "\\lim\\limits_{?}\\,"     cdlatex-position-cursor nil nil t)
     ("intl"       "Insert \\int\\limits_{}^{}\\,"
      "\\int\\limits_{?}^{}\\,"  cdlatex-position-cursor nil nil t)
-    ("suml"       "Insert \\sum\\limits_{}^{}"
+    ("sum"       "Insert \\sum\\limits_{}^{}"
      "\\sum\\limits_{?}^{}"  cdlatex-position-cursor nil nil t)
     ("nonum"      "Insert \\nonumber\\\\"
      "\\nonumber\\\\\n"      nil nil nil t)
+    ("nn"        "nonumber followed by a new item"
+     "\\nonumber" cdlatex-item nil t t)
     ("fn"         "Make a footnote"
      "\\footnote{?}" cdlatex-position-cursor nil t nil)
     ("qu"         "Insert \\quad "
@@ -1501,10 +1505,11 @@ zZ
     ( ?u    "\\breve"             nil        t   t   nil )
     ( ?m    "\\mbox"              nil        t   nil nil )
     ( ?c    "\\mathcal"           nil        t   nil nil )
+    ( ?s    "\\mathscr"           nil        t   nil nil )
     ( ?r    "\\mathrm"            "\\textrm" t   nil nil )
     ( ?i    "\\mathit"            "\\textit" t   nil nil )
     ( ?l    nil                   "\\textsl" t   nil nil )
-    ( ?b    "\\mathbf"            "\\textbf" t   nil nil )
+    ( ?b    "\\boldsymbol"            "\\textbf" t   nil nil )
     ( ?e    "\\mathem"            "\\emph"   t   nil nil )
     ( ?y    "\\mathtt"            "\\texttt" t   nil nil )
     ( ?f    "\\mathsf"            "\\textsf" t   nil nil )
@@ -1543,7 +1548,7 @@ zZ
     ( ?L  ("\\Lambda "         ))
     ( ?m  ("\\mu "             ))
     ( ?M  (""                 ))
-    ( ?n  ("\\nu "             ""                "\\ln "))
+    ( ?n  ("\\nu "             "\\nabla "        "\\ln "))
     ( ?N  ("\\nabla "          ""                "\\exp "))
     ( ?o  ("\\omega "          ))
     ( ?O  ("\\Omega "          "\\mho "))
@@ -1684,23 +1689,23 @@ nil
 ;;------------------------------------
 ( "eqnarray"
 "\\begin{eqnarray}
-AUTOLABEL
-? &  & \\\\
+    AUTOLABEL
+    ? &  & 
 \\end{eqnarray}"
-"\\\\AUTOLABEL
-? &  & "
+  "\\\\    AUTOLABEL
+    ? &  & "
 )
 ;;------------------------------------
 ( "eqnarray*"
-"\\begin{eqnarray*}
-? & & \\\\
+  "\\begin{eqnarray*}
+    ? &  & 
 \\end{eqnarray*}"
-"\\\\? & & "
+  "\\\\    ? &  & "
 )
 ;;------------------------------------
 ( "equation"
 "\\begin{equation}
-AUTOLABEL
+    AUTOLABEL
 ?
 \\end{equation}"
 nil
