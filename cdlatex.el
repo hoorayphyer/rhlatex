@@ -774,28 +774,38 @@ With arg, insert pair of double dollars."
 
 (defun cdlatex-sub-superscript ()
   "Insert ^{} or _{} unless the number of backslashes before point is odd.
-When not in LaTeX math environment, _{} and ^{} will have dollars."
+When not in LaTeX math environment, _{} and ^{} will have dollars.
+   RH : when not in math envrionment, _ and ^ will only insert themselves."
   (interactive)
   (if (cdlatex-number-of-backslashes-is-odd)
       ;; Quoted
       (insert (event-basic-type last-command-event))
     ;; Check if we need to switch to math mode
-    (if (not (texmathp)) (cdlatex-dollar))
-    (if (string= (buffer-substring (max (point-min) (- (point) 2)) (point))
-                 (concat (char-to-string (event-basic-type last-command-event))
-			 "{"))
-        ;; We are at the start of a sub/suberscript.  Allow a__{b} and a^^{b}
-        ;; This is an undocumented feature, please keep it in.  It supports
-        ;; a special notation which can be used for upright sub- and 
-        ;; superscripts. 
+    (if (not (texmathp))
+        ;; RH : insert itself
         (progn
-          (backward-char 1)
+          (insert "\\")
           (insert (event-basic-type last-command-event))
-          (forward-char 1))
-      ;; Insert the normal template.
-      (insert (event-basic-type last-command-event))
-      (insert "{}")
-      (forward-char -1))))
+          )
+
+      (if (string= (buffer-substring (max (point-min) (- (point) 2)) (point))
+                   (concat (char-to-string (event-basic-type last-command-event))
+                           "{"))
+          ;; We are at the start of a sub/suberscript.  Allow a__{b} and a^^{b}
+          ;; This is an undocumented feature, please keep it in.  It supports
+          ;; a special notation which can be used for upright sub- and 
+          ;; superscripts. 
+          (progn
+            (backward-char 1)
+            (insert (event-basic-type last-command-event))
+            (forward-char 1))
+        ;; Insert the normal template.
+        (insert (event-basic-type last-command-event))
+        (insert "{}")
+        (forward-char -1))
+
+      )
+    ))
 
 (defun cdlatex-lr-pair ()
   "Insert a \\left-\\right pair of parens."
@@ -1007,7 +1017,13 @@ the template.  This is mainly useful for \"items\" of environments, where
     (while (search-forward "AUTOFILE" (marker-position endmarker) t)
       (backward-delete-char 8)
       (call-interactively 'cdlatex-insert-filename))
-    
+
+    ;; Look for AUTOINDENT requests
+    (goto-char begpos)
+    (while (search-forward "AUTOINDENT_" (marker-position endmarker) t)
+      (backward-delete-char 11)
+      (insert "  "))
+
     ;; Look for AUTOLABEL requests
     (goto-char begpos)
     (while (search-forward "AUTOLABEL" (marker-position endmarker) t)
@@ -1109,7 +1125,8 @@ math environment, you also get a pair of dollars."
         (progn
           (insert-char cdlatex-math-symbol-prefix level)
           ;; (funcall (cdr (assoc char cdlatex-which-major-mode-map )))
-          (insert char)
+          (unless (equal char ?\r) ;; RH: prefix followed by an Enter key simply inserts prefix
+            (insert char))
           (catch 'aaa)
           (throw 'aaa nil)))
 
@@ -1465,15 +1482,15 @@ zZ
     ("int"       "Insert \\int_{}^{}\\,"
      "\\int_{?}^{}\\,"       cdlatex-position-cursor nil nil t)
     ("lim"       "Insert \\lim\\limits_{}\\,"
-     "\\lim\\limits_{?}\\,"     cdlatex-position-cursor nil nil t)
+     "\\lim\\limits_{? \to  }\\,"     cdlatex-position-cursor nil nil t)
     ("intl"       "Insert \\int\\limits_{}^{}\\,"
      "\\int\\limits_{?}^{}\\,"  cdlatex-position-cursor nil nil t)
-    ("sum"       "Insert \\sum\\limits_{}^{}"
-     "\\sum\\limits_{?}^{}"  cdlatex-position-cursor nil nil t)
+    ("sum"       "Insert \\sum\\limits_{}^{}\\,"
+     "\\sum\\limits_{?}^{}\\,"  cdlatex-position-cursor nil nil t)
     ("nonum"      "Insert \\nonumber\\\\"
      "\\nonumber\\\\\n"      nil nil nil t)
     ("nn"        "nonumber followed by a new item"
-     "\\nonumber" cdlatex-item nil t t)
+     " \\nonumber" cdlatex-item nil t t)
     ("fn"         "Make a footnote"
      "\\footnote{?}" cdlatex-position-cursor nil t nil)
     ("qu"         "Insert \\quad "
@@ -1491,13 +1508,14 @@ zZ
     ( ?\:   "\\ddot"              nil        t   t   nil )
     ( ?\~   "\\tilde"             nil        t   t   nil )
     ( ?N    "\\widetilde"         nil        t   t   nil )
-    ( ?^    "\\hat"               nil        t   t   nil )
+    ( ?h    "\\hat"               nil        t   t   nil )
     ( ?H    "\\widehat"           nil        t   t   nil )
     ( ?\-   "\\bar"               nil        t   t   nil )
     ( ?T    "\\overline"          nil        t   nil nil )
     ( ?\_   "\\underline"         nil        t   nil nil )
     ( ?\{   "\\overbrace"         nil        t   nil nil )
     ( ?\}   "\\underbrace"        nil        t   nil nil )
+    ( ?     "\\phantom"           nil        t   nil nil )
     ( ?\>   "\\vec"               nil        t   t   nil )
     ( ?/    "\\grave"             nil        t   t   nil )
     ( ?\\   "\\acute"             nil        t   t   nil )
@@ -1513,6 +1531,7 @@ zZ
     ( ?e    "\\mathem"            "\\emph"   t   nil nil )
     ( ?y    "\\mathtt"            "\\texttt" t   nil nil )
     ( ?f    "\\mathsf"            "\\textsf" t   nil nil )
+    ( ?p    "\\phantom"           nil        t   nil nil )
     ( ?0    "\\textstyle"         nil        nil nil nil )
     ( ?1    "\\displaystyle"      nil        nil nil nil )
     ( ?2    "\\scriptstyle"       nil        nil nil nil )
@@ -1689,31 +1708,32 @@ nil
 ;;------------------------------------
 ( "eqnarray"
 "\\begin{eqnarray}
-    AUTOLABEL
-    ? &  & 
+AUTOINDENT_AUTOLABEL
+AUTOINDENT_? &  & 
 \\end{eqnarray}"
-  "\\\\    AUTOLABEL
-    ? &  & "
+"\\\\AUTOINDENT_AUTOLABEL
+AUTOINDENT_? &  & "
 )
 ;;------------------------------------
 ( "eqnarray*"
-  "\\begin{eqnarray*}
-    ? &  & 
+"\\begin{eqnarray*}
+AUTOINDENT_? &  & 
 \\end{eqnarray*}"
-  "\\\\    ? &  & "
+"\\\\AUTOINDENT_? &  & "
 )
 ;;------------------------------------
 ( "equation"
 "\\begin{equation}
-    AUTOLABEL
-?
+AUTOINDENT_AUTOLABEL
+AUTOINDENT_?
 \\end{equation}"
 nil
 )
 ;;------------------------------------
 ( "figure"
 "\\begin{figure}[htbp]
-\\centerline{\\includegraphics[]{AUTOFILE}}
+\\centering
+\\includegraphics[width=\\textwidth]{AUTOFILE}
 \\caption[]{AUTOLABEL ?}
 \\end{figure}"
 nil
@@ -1905,19 +1925,25 @@ nil
 )
 ;;------------------------------------
 ;; AMS-LaTeX
+;; \label doesn't work with \nonumber in align
+;; ( "align"
+;; "\\begin{align}
+;; AUTOLABEL
+;;   ?
+;; \\end{align}"
+;; "\\\\AUTOLABEL
+;; ?")
 ( "align"
 "\\begin{align}
-AUTOLABEL
-?
+  ? &
 \\end{align}"
-"\\\\AUTOLABEL
-?")
+  "\\\\  ? & ")
 ;;------------------------------------
 ( "align*"
 "\\begin{align*}
-?
+  ? &
 \\end{align*}"
-"\\\\?")
+"\\\\  ? & ")
 ;;------------------------------------
 ( "alignat"
 "\\begin{alignat}{?}
